@@ -137,3 +137,56 @@ public class CertificateCheckerTest {
         assertFalse(result);
     }
 }
+
+
+---------------------
+
+import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.X509Certificate;
+
+public class BasicClass1Test {
+
+    @Test
+    public void testCertValidityWhenNotNull() throws Exception {
+        // Mock X509Certificate
+        X509Certificate certificate = mock(X509Certificate.class);
+        
+        // Set up mock behavior for certificate validity check
+        when(certificate.checkValidity()).thenReturn(true);
+        
+        // Mock BasicClass
+        BasicClass basicClass = mock(BasicClass.class);
+        when(basicClass.getx509certificate()).thenReturn(certificate);
+        
+        // Create an instance of BasicClass1
+        BasicClass1 basicClass1 = new BasicClass1(basicClass);
+        
+        // Call isCertValid method
+        boolean result = basicClass1.isCertValid();
+        
+        // Assert that the result is true
+        assertTrue(result);
+    }
+
+    @Test
+    public void testCertValidityWhenNull() throws Exception {
+        // Mock BasicClass
+        BasicClass basicClass = mock(BasicClass.class);
+        when(basicClass.getx509certificate()).thenReturn(null);
+        
+        // Create an instance of BasicClass1
+        BasicClass1 basicClass1 = new BasicClass1(basicClass);
+        
+        // Call isCertValid method
+        boolean result = basicClass1.isCertValid();
+        
+        // Assert that the result is false
+        assertFalse(result);
+    }
+}
+
