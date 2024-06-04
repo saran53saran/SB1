@@ -64,3 +64,76 @@ SubjectPublicKeyInfo subjectPublicKeyInfo = SubjectPublicKeyInfo.getInstance(key
         }
     }
 }
+
+
+----------------
+
+import java.security.cert.X509Certificate;
+
+public class CertificateChecker {
+
+    public boolean checkCert(X509Certificate certificate) {
+        // Original implementation
+        try {
+            certificate.checkValidity();
+            return true; // Certificate is valid
+        } catch (Exception e) {
+            return false; // Certificate is invalid
+        }
+    }
+
+    public X509Certificate initccert(X509Certificate certificate) {
+        // Original implementation
+        return certificate;
+    }
+}
+
+
+
+import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
+import java.security.cert.X509Certificate;
+
+public class CertificateCheckerTest {
+
+    @Test
+    public void testCheckValidCertificate() throws Exception {
+        // Mock X509Certificate
+        X509Certificate certificate = mock(X509Certificate.class);
+        
+        // Set up mock behavior for certificate validity check
+        when(certificate.checkValidity()).thenReturn(true);
+        
+        // Create an instance of CertificateChecker
+        CertificateChecker checker = new CertificateChecker();
+        
+        // Call checkCert method with the mocked certificate
+        boolean result = checker.checkCert(certificate);
+        
+        // Assert that the result is true
+        assertTrue(result);
+    }
+
+    @Test
+    public void testCheckInvalidCertificate() throws Exception {
+        // Mock X509Certificate
+        X509Certificate certificate = mock(X509Certificate.class);
+
+        // Set up mock behavior for certificate validity check to throw CertificateExpiredException
+        when(certificate.checkValidity()).thenThrow(new CertificateExpiredException());
+
+        // Create an instance of CertificateChecker
+        CertificateChecker checker = new CertificateChecker();
+
+        // Call checkCert method with the mocked certificate
+        boolean result = checker.checkCert(certificate);
+
+        // Assert that the result is false
+        assertFalse(result);
+    }
+}
