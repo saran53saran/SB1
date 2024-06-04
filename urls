@@ -1,17 +1,64 @@
-http://crunchify.com
-http://yahoo.com
-http://www.ebay.com
-https://google.com
-http://www.example.co
-https://paypal.com
-http://bing.com/
-http://techcrunch.com/
-http://mashable.com/
-https://thenextweb.com/
-http://wordpress.com/
-http://wordpress.org/
-http://example.com/
-http://sjsu.edu/
-https://ebay.co.uk/
-http://google.co.uk/
-http://wikipedia.org/
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.cert.X509Certificate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import org.junit.Test;
+
+public class CertificateValidityTest {
+
+    @Test
+    public void testCertificateValidity() throws Exception {
+        // Generate a key pair
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(2048);
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+
+        // Generate a self-signed certificate that expires in 5 minutes
+        X509Certificate certificate = generateSelfSignedCertificate("CN=example.com", keyPair);
+
+        // Test certificate validity while valid
+        assertTrue("Certificate should be valid", isCertificateValid(certificate));
+
+        // Wait for the certificate to expire
+        Thread.sleep(5 * 60 * 1000); // Sleep for 5 minutes
+        // Test certificate validity after expiry
+        assertFalse("Certificate should be expired", isCertificateValid(certificate));
+    }
+
+    private X509Certificate generateSelfSignedCertificate(String dn, KeyPair keyPair) throws Exception {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiryDateTime = now.plus(5, ChronoUnit.MINUTES);
+
+        Date startDate = Date.from(now.toInstant(ZoneOffset.UTC));
+        Date expiryDate = Date.from(expiryDateTime.toInstant(ZoneOffset.UTC));
+
+        X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(
+                new X500Name(dn),
+                BigInteger.valueOf(System.currentTimeMillis()),
+                startDate,
+                expiryDate,
+                new X500Name(dn),
+                keyPair.getPublic());
+
+        // Sign the certificate with the private key
+        PrivateKey privateKey = keyPair.getPrivate();
+        X509CertificateHolder certHolder = certBuilder.build(new JcaContentSignerBuilder("SHA256WithRSA").build(privateKey));
+
+        // Convert the certificate holder to X509Certificate
+        return new JcaX509CertificateConverter().getCertificate(certHolder);
+    }
+
+    private boolean isCertificateValid(X509Certificate certificate) {
+        try {
+            certificate.checkValidity();
+            return true; // Certificate is valid
+        } catch (CertificateExpiredException | CertificateNotYetValidException e) {
+            return false; // Certificate is expired or not yet valid
+        }
+    }
+}
