@@ -37,6 +37,8 @@ public class CertificateValidityTest {
         Date startDate = Date.from(now.toInstant(ZoneOffset.UTC));
         Date expiryDate = Date.from(expiryDateTime.toInstant(ZoneOffset.UTC));
 
+SubjectPublicKeyInfo subjectPublicKeyInfo = SubjectPublicKeyInfo.getInstance(keyPair.getPublic().getEncoded());
+
         X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(
                 new X500Name(dn),
                 BigInteger.valueOf(System.currentTimeMillis()),
